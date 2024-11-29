@@ -19,6 +19,15 @@ bibliography: references.bib
 
 library(tidyverse)
 library(palmerpenguins)
+library(knitr)
+library(arrow)
+library(ggplot2)
+library(dplyr)
+library(here)
+library(kableExtra)
+library(gridExtra)
+library(modelsummary)
+library(rstanarm)
 ```
 
 
@@ -183,67 +192,56 @@ ggplot(analysis_data, aes(x = vendor, y = current_price)) +
 
 @fig-Bar-plot-of-old-price highlights how each vendor prices their products within the market. It shows that both vendors offer a wide range of prices, yet the spread and density of the data points may indicate Metro’s pricing strategy targets both lower and upper market segments, whereas SaveOnFoods might be focusing on a specific niche.
 
-# Model
+# Model {#sec-model} 
 
-The goal of our modelling strategy is twofold. Firstly,...
-
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
+The goal of our Bayesian multiple linear regression is to investigate the factors that influence the current price of coffee in our dataset. Specifically, we try7  to understand how historical pricing, vendor differences, and seasonal monthly pattern affect current coffee prices.
 
 ## Model set-up
 
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+Define $y_i$ as the current price of coffee for the $i$-th observation in the dataset. The predictors include:
+
+- $x_{1i}$, the old price of the coffee,
+- $x_{2i}$, dummy variable for the vendor, where:\
+$x_{2i}$ = 1: Vendor is "SaveOnFoods"; 
+$x_{2i}$ = 0: Vendor is "Metro",
+- $x_{3i}$, the numeric month variable.
+
+The model is formulated as follows:
 
 \begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
+y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma), \\
+\mu_i &= \alpha + \beta_1 \cdot x_{1i} + \beta_2 \cdot x_{2i} + \beta_3 \cdot x_{3i}, \\
+\alpha &\sim \mbox{Normal}(0, 2.5), \\
+\beta_1 &\sim \mbox{Normal}(0, 2.5), \\ 
+\beta_2 &\sim \mbox{Normal}(0, 2.5), \\
+\beta_3 &\sim \mbox{Normal}(0, 2.5), \\
+\sigma &\sim \mbox{Exponential}(1).
 \end{align}
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
 
+This model describes the relationship between the current price of coffee $\left(y_i\right)$ and three predictors: the old price of coffee $\left(x_{1 i}\right)$, a categorical vendor variable $\left(x_{2 i}\right)$ indicating whether the vendor is "Metro" or "SaveOnFoods," and a numeric variable for the month $\left(x_{3 i}\right)$. The response variable $\left(y_i\right)$ is modeled as normally distributed with mean $\mu_i$ and standard deviation $\sigma$. The mean $\mu_i$ is defined as a linear combination of these predictors, with coefficients $\beta_1, \beta_2$, and $\beta_3$, and an intercept $\alpha$. Prior distributions for the parameters are specified, including normal priors for $\alpha$ and the coefficients, and an exponential prior for $\sigma$. Intercept $\alpha$ represents the baseline mean current price for Metro if $x_{2i}$ = 1; otherwise when $x_{2i}$ = 0, it represents the mean current price for SaveOnFoods. Also, when old price and month is equal to 0, the intercept is not meaningful. Coefficient $\beta_1$ captures how changes in the old price affect the current price. Coefficient $\beta_2$ measures the difference in the mean coffee price between SaveOnFoods ($x_{2i}$ = 1) and Metro ($x_{2i}$ = 0). Coefficient $\beta_3$ reflects how the month influences current pricing, potentially capturing seasonal effects. 
+
+
+To implement this Bayesian model, we use the `rstanarm` package [@citerstanarm] in `R` [@citeR].
 
 ### Model justification
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
+The Bayesian Multiple Linear Regression (MLR) model is a suitable choice for analyzing the relationship between `current_price` (the dependent variable) and the predictors in the dataset. The dependent variable is continuous, and the Bayesian framework assumes a normal distribution for the response, which aligns well with the nature of coffee prices. This model captures the linear relationships between `old_price` (continuous), `vendor` (categorical, represented as a dummy variable), and `month` (numeric). These predictors are assumed to have additive effects on the response, which fits the linear regression framework. Logistic regression is used when the outcome variable is binary (e.g. 0 or 1). However, in our dataset, the dependent variable, `current_price`, is continuous. Since logistic regression cannot model continuous outcomes, it is unsuitable for this analysis. Also, poisson or negative binomial regression is typically applied when the response variable represents count data (e.g., the number of events occurring in a fixed period). `current_price` does not represent counts but rather continuous pricing data. Thus, these models do not align with the nature of the dependent variable.
 
-We can use maths by including latex between dollar signs, for instance $\theta$.
+## Model validation
+
+@fig-ppcheck-and-posterior-vs-prior shows that our model accurately captures the central tendency of the data, though there are some deviations in the tail ends suggesting that the fit could be improved for extreme values. Additionally, the parameter estimation comparison chart highlights that most parameter estimates closely align with their priors, indicating a strong influence of prior settings on the estimates, especially under limited data. This is particularly evident with the vendorSaveOnFoods parameter, where its posterior distribution significantly diverges from others, hinting at potential anomalies in data sources or unique behaviors that warrant further investigation.
+
+@fig-trace-plot illustrate that our Bayesian model parameters are converging and demonstrating stability, essential for robust statistical inference. The slight oscillation of the intercept around -0.5 indicates minor variability. Meanwhile, the old price coefficient shows remarkable consistency at approximately 0.77, underlining dependable estimates. The month parameter's minor fluctuations suggest a subtle yet consistent temporal effect. The vendorSaveOnFoods coefficient consistently remains near -0.6, indicating a persistently negative price influence compared to Metro. Finally, sigma's stability around 1.75 ensures the model's error variability is well-accounted for. These observations collectively affirm that the model's parameters are effectively calibrated, offering a reliable foundation for understanding the influences on coffee prices.
+
+In @fig-rhat-plot analysis of coffee product pricing in Canada, the use of the $\hat{R}$ values to assess model convergence reveals that all parameters have $\hat{R}$ values below 1.05, indicating excellent convergence of the model. This result validates the reliability of our model in estimating coffee prices and ensures the robustness of the analysis outcomes. It allows us to trust the model outputs, providing a solid foundation for further strategic decision-making and market analysis.
 
 
-# Results
+# Results {#sec-results}
 
-Our results are summarized in @tbl-modelresults.
+@tbl-model-summary indicates a robust fit with a high $R^2$ of 0.900, suggesting a strong explanatory power of the model regarding the variance in coffee product prices. The model's parameters show that the old price of coffee (coefficient = 0.77) has a significant positive influence on the current price, suggesting that past pricing trends are good predictors of current pricing strategies. Vendor impact, specifically SaveOnFoods, shows a negative association with current price (coefficient = -0.61), indicating that coffee products from SaveOnFoods tend to be cheaper compared to Metro. Additionally, the month coefficient (0.06) implies a slight monthly variation in coffee pricing. The model's predictive performance is validated by low WAIC and LOOIC scores, and a small RMSE of 1.75, enhancing confidence in the reliability of its predictions.
 
-```{r}
-#| echo: false
-#| eval: true
-#| warning: false
-#| message: false
-
-library(rstanarm)
-
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
-```
-
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
-#| warning: false
-
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
-```
-
+@fig-credibility-interval llustrates the posterior distributions for the parameters in your Bayesian regression model, analyzing factors influencing coffee prices. The intercept shows a slight positive baseline effect. The old price of coffee strongly and positively affects the current price, indicating a direct relationship. The month variable shows a minimal and variable impact. SaveOnFoods, as a vendor, is associated with lower prices compared to Metro. The sigma parameter, indicating the model's error variance, shows a sharp and precise estimation, suggesting consistent variability in the data explained by the model.
 
 
 
@@ -269,60 +267,86 @@ Weaknesses and next steps should also be included.
 
 # Appendix {-}
 
-
-# Additional data details
-
-# Model details {#sec-model-details}
-
-## Posterior predictive check
-
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
-
+# Model details
 ```{r}
 #| eval: true
 #| echo: false
 #| message: false
 #| warning: false
-#| label: fig-ppcheckandposteriorvsprior
+#| label: fig-ppcheck-and-posterior-vs-prior
 #| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
+#| fig-cap: "PPcheck & Posterior vs Prior"
 #| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
-pp_check(first_model) +
+Coffee_product_pricing <-
+  readRDS(file = here::here("models/Coffee_product_pricing.rds"))
+
+pp_check(Coffee_product_pricing) +
   theme_classic() +
   theme(legend.position = "bottom")
 
-posterior_vs_prior(first_model) +
+posterior_vs_prior(Coffee_product_pricing) +
   theme_minimal() +
   scale_color_brewer(palette = "Set1") +
   theme(legend.position = "bottom") +
   coord_flip()
 ```
 
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
 ```{r}
-#| echo: false
+#| label: tbl-model-summary
+#| tbl-cap: "Model summary of Coffee product pricing"
 #| eval: true
-#| message: false
+#| echo: false
 #| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
+#| message: false
 
-plot(first_model, "trace")
+# Generate model summary table
+modelsummary(
+  list(
+    "Coffee product pricing" = Coffee_product_pricing
+  ),
+  fmt = 2
+)
 
-plot(first_model, "rhat")
 ```
 
 
+```{r}
+#| label: fig-credibility-interval
+#| fig-cap: "credibility interval"
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+plot(
+  Coffee_product_pricing,
+  "areas"
+)
+```
+
+```{r}
+#| label: fig-trace-plot
+#| fig-cap: "Trace plot"
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+plot(Coffee_product_pricing, "trace")
+
+```
+
+```{r}
+#| label: fig-rhat-plot
+#| fig-cap: "R-hat plot"
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+plot(Coffee_product_pricing, "rhat")
+```
 
 \newpage
 
