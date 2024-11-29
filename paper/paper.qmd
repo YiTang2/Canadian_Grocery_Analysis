@@ -2,9 +2,8 @@
 title: "My title"
 subtitle: "My subtitle if needed"
 author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: [https://github.com/RohanAlexander/starter_folder](https://github.com/RohanAlexander/starter_folder)."
+  - Yi Tang
+thanks: "Code and data are available at: https://github.com/YiTang2/Canadian_Grocery_Analysis.git "
 date: today
 date-format: long
 abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
@@ -44,71 +43,145 @@ Telegraphing paragraph: The remainder of this paper is structured as follows. @s
 
 ## Overview
 
-We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
+Price of each month's coffee of different vendors data is provided by[@citedata]. This dataset records detailed sales about fast-moving consumer goods (FMCG) sold by various vendors, including volia, T&T, Loblaws, SaveOnFoods, Galleria, Metro, NoFrills and Walmart. It is also includes product-level details, such as the product name, current price, historical price (`old_price`), and the corresponding units and price per unit. The data also captures time-specific observations(2024-2-28 to 2024-6-22), with timestamps (nowtime) that can be used to analyze trends over days or months.
 
-Overview text
+In order to simulate data, test simulated data, clean data, test cleaned data, exploratory data analysis and model data, we used R programming language [@citeR] to analyze the data and plot the graphs. Specific libraries that assisted the analysis include `tidyverse` [@citetidyverse], `palmerpenguins` [@palmerpenguins], `knitr` [@citeknitr], `arrow` [@citearrow], `ggplot2` [@citeggplot2],  `dplyr` [@citedplyr],  `here` [@citehere], `kableExtra` [@citekableExtra], `gridExtra`[@citegridExtra], `modelsummary`[@citemodelsummary], `rstanarm`[@citerstanarm].
 
-## Measurement
-	
-Some paragraphs about how we go from a phenomena in the world to an entry in the dataset.
+The inspiration for my data processing came from my desire to study what factors would affect the current price of coffee products from two vendors in different regions of Canada, such as the current price of coffee products from two vendors, Metro and SaveOnFoods. The following variables are the data I selected after cleaning the data:
 
-## Outcome variables
+- `vendor`: The retailer selling the product in Canada.
+- `old_price`: The historical price of the product, showing previous pricing or discounts.
+- `product_name`: The specific product being sold, providing product-level insights.
+- `current_price`: The price of the product at the time of observation.
 
-Add graphs, tables and text. Use sub-sub-headings for each outcome variable or update the subheading to be singular.
+New variable extracted and transformed from raw data:
 
+- `month`: The month of data collection, extracted from `nowtime`.
 
+Since the variable nowtime only records 4 months, it is considered a lack of Long-Term Trends, which means it's difficult to identify long-term pricing or demand patterns by using short data periods. So I only extracted a new variable—month from date of nowtime, which can simplify temporal analysis and identify trends, such as seasonal monthly pattern with price changes or demand patterns. It allows grouping data for monthly aggregation and supporting seasonality-focused insights or forecasting models.
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
-
-```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
-#| echo: false
-
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
-```
-
-Talk more about it.
-
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
+To provide an preview of the coffee pricing with all potential factors that might affect it. Here, @tbl-sample-analysis-data simply reveals the variation between current price and old price in June for Metro's coffee products.
 
 ```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: tbl-sample-analysis-data
+#| tbl-cap: "Sample of Analysis Data Showing Products Sold by Both Vendors"
 #| echo: false
 #| warning: false
 #| message: false
 
-analysis_data <- read_csv(here::here("data/02-analysis_data/analysis_data.csv"))
+# Load the analysis data
+analysis_data <- read_parquet(here("data", "02-analysis_data", "analysis_data.parquet"))
 
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
+# Select the first 10 rows
+preview_table <- head(analysis_data, 10)
+
+# Display the table
+preview_table |>
+  kable(
+    col.names = colnames(preview_table),  # Use original column names
+    digits = 2,  # Format numeric columns with 2 decimal places
+    booktabs = TRUE,  # LaTeX-style formatting
+    align = c("l", "l", "r", "r", "c"),  # Align columns (left, right, center)
+    format.args = list(big.mark = ",")  # Add thousand separators to numbers
+  ) |>
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
 ```
 
-Talk way more about it. 
+## Measurement
 
-## Predictor variables
+The dataset from Hammer represents real-world retail activities, capturing product details, vendor listings, and price updates. When vendors update product information, such as pricing or availability, Hammer collects and structures this information into the dataset.
 
-Add graphs, tables and text.
+Key fields include vendor, product name, current price, old price, and nowtime. The data is collected through scraping and structured to enable analysis of retail trends, pricing strategies, and market dynamics over time. Each entry serves as a snapshot of a product's presence in the market at a specific time, allowing for focused analyses, like tracking price trends for specific products (e.g., coffee).
 
-Use sub-sub-headings for each outcome variable and feel free to combine a few into one if they go together naturally.
+## Data Visualization
+
+```{r}
+#| label: fig-Hist-of-current-price
+#| fig-cap: "Histogram of Current Price"
+#| message: false
+#| echo: false
+
+# First Graph
+ggplot(analysis_data, aes(x = current_price)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  labs(x = "Current Price", y = "Frequency") +
+  theme_minimal()
+```
+
+@fig-Hist-of-current-price shows a notable distribution with significant concentrations around 10 and 20 units. This suggests a pricing tier system where certain types of coffee products might be grouped by price points due to quality, brand, or other market factors. The dual peaks could indicate two main categories of coffee products, possibly differentiated by premium versus regular products.
+
+```{r}
+#| label: fig-Hist-of-old-price
+#| fig-cap: "Histogram of Old Price"
+#| message: false
+#| echo: false
+
+# Second Graph
+
+ggplot(analysis_data, aes(x = old_price)) +
+  geom_histogram(bins = 30, fill = "salmon", color = "black") +
+  labs(x = "Old Price", y = "Frequency") +
+  theme_minimal()
+
+```
+
+According to @fig-Hist-of-old-price, the distribution is mainly focused between 5 and 20 units, pointing to a past market strategy where products were clustered around these prices. The consistency in this price range might reflect a stable market before any recent pricing adjustments influenced by external factors like supplier changes or inflation.
+
+```{r}
+#| label: fig-Bar-plot-of-old-price
+#| fig-cap: "Bar Plot of Old Price"
+#| message: false
+#| echo: false
+
+# Third Graph
+
+ggplot(analysis_data, aes(x = vendor, fill = vendor)) +
+  geom_bar() +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(x = "Vendor", y = "Frequency") +
+  theme_minimal()
+```
+
+In @fig-Bar-plot-of-old-price, the frequency of products available from Metro significantly surpasses that from SaveOnFoods, suggesting that Metro has a larger share of the market or a wider variety of coffee products. This dominance in product offerings could provide Metro with a competitive edge in attracting a broader customer base.
+
+```{r}
+#| label: fig-scatter-plot-of-current-vs-old-price
+#| fig-cap: "Scatterplot of Current Price vs Old Price"
+#| message: false
+#| echo: false
+
+# Fourth Graph
+
+ggplot(analysis_data, aes(x = old_price, y = current_price)) +
+  geom_point(aes(color = vendor), alpha = 0.6) +
+  scale_color_manual(values = c("Metro" = "blue", "SaveOnFoods" = "red")) +
+  labs(x = "Old Price", y = "Current Price") +
+  theme_minimal()
+
+```
+
+The positive relationship shown in @fig-scatter-plot-of-current-vs-old-price here indicates that current prices are influenced by their historical prices, maintaining a proportional increase or decrease. This trend suggests a pricing policy that adjusts prices based on previous benchmarks while taking into account factors like cost adjustments or market demand.
+
+```{r}
+#| label: fig-barplot-of-old-price
+#| fig-cap: "Boxplot of Current Price by Vendor"
+#| message: false
+#| echo: false
 
 
+# Fifth Graph
+ggplot(analysis_data, aes(x = vendor, y = current_price)) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.3, width = 0.15, height = 0) +
+  labs(
+    x = "Vendor",
+    y = "Current Price"
+  ) +
+  theme_minimal()
 
+```
 
-
-
-
+@fig-Bar-plot-of-old-price highlights how each vendor prices their products within the market. It shows that both vendors offer a wide range of prices, yet the spread and density of the data points may indicate Metro’s pricing strategy targets both lower and upper market segments, whereas SaveOnFoods might be focusing on a specific niche.
 
 # Model
 
