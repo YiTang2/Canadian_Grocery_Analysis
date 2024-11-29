@@ -9,9 +9,6 @@
 
 
 
-#### Workspace setup ####
-library(tidyverse)
-library(rstanarm)
 
 #### Workspace setup ####
 library(tidyverse)

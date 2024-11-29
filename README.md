@@ -1,9 +1,8 @@
-# Starter folder
+# Canadian Grocery Coffee Products Pricing
 
 ## Overview
 
-This repo provides students with a foundation for their own projects associated with *Telling Stories with Data*. You do not need every aspect for every paper and you should delete aspects that you do not need.
-
+This paper investigates the factors that influence the current pricing of coffee products in Canadian grocery stores, focusing primarily on historical price data, seasonal trends, and vendor differences. The study uses a Bayesian multiple linear regression model to analyze how these variables affect current prices. The results indicate that historical prices are the strongest predictor of current coffee prices, with significant differences also observed between vendors such as Metro and SaveOnFoods. Seasonal trends show smaller but notable effects. The findings try to inform retail pricing strategies by understanding the impact of past prices, vendor-specific dynamics, and seasonal factors on coffee pricing in the market.
 
 ## File Structure
 
@@ -19,12 +18,4 @@ The repo is structured as:
 
 ## Statement on LLM usage
 
-Aspects of the code were written with the help of the auto-complete tool, Codriver. The abstract and introduction were written with the help of ChatHorse and the entire chat history is available in inputs/llms/usage.txt.
-
-## Some checks
-
-- [ ] Change the rproj file name so that it's not starter_folder.Rproj
-- [ ] Change the README title so that it's not Starter folder
-- [ ] Remove files that you're not using
-- [ ] Update comments in R scripts
-- [ ] Remove this checklist
+I confirm that no LLM tools were used in this paper.

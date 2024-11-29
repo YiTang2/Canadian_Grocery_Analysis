@@ -105,7 +105,7 @@ Key fields include vendor, product name, current price, old price, and nowtime. 
 
 ```{r}
 #| label: fig-Hist-of-current-price
-#| fig-cap: "Histogram of Current Price"
+#| fig-cap: "Frequency of Current Price"
 #| message: false
 #| echo: false
 
@@ -120,7 +120,7 @@ ggplot(analysis_data, aes(x = current_price)) +
 
 ```{r}
 #| label: fig-Hist-of-old-price
-#| fig-cap: "Histogram of Old Price"
+#| fig-cap: "Frequency of Old Price"
 #| message: false
 #| echo: false
 
@@ -136,8 +136,8 @@ ggplot(analysis_data, aes(x = old_price)) +
 According to @fig-Hist-of-old-price, the distribution is mainly focused between 5 and 20 units, pointing to a past market strategy where products were clustered around these prices. The consistency in this price range might reflect a stable market before any recent pricing adjustments influenced by external factors like supplier changes or inflation.
 
 ```{r}
-#| label: fig-Bar-plot-of-old-price
-#| fig-cap: "Bar Plot of Old Price"
+#| label: fig-Bar-plot-of-vendor
+#| fig-cap: "Frequency of Vendor"
 #| message: false
 #| echo: false
 
@@ -154,7 +154,7 @@ In @fig-Bar-plot-of-old-price, the frequency of products available from Metro si
 
 ```{r}
 #| label: fig-scatter-plot-of-current-vs-old-price
-#| fig-cap: "Scatterplot of Current Price vs Old Price"
+#| fig-cap: "Current Price vs Old Price"
 #| message: false
 #| echo: false
 
@@ -172,7 +172,7 @@ The positive relationship shown in @fig-scatter-plot-of-current-vs-old-price her
 
 ```{r}
 #| label: fig-barplot-of-old-price
-#| fig-cap: "Boxplot of Current Price by Vendor"
+#| fig-cap: "Current Price by Vendor"
 #| message: false
 #| echo: false
 
@@ -238,7 +238,7 @@ In @fig-rhat-plot analysis of coffee product pricing in Canada, the use of the $
 
 # Results {#sec-results}
 
-@tbl-model-summary indicates a robust fit with a high $R^2$ of 0.900, suggesting a strong explanatory power of the model regarding the variance in coffee product prices. The model's parameters show that the old price of coffee (coefficient = 0.77) has a significant positive influence on the current price, suggesting that past pricing trends are good predictors of current pricing strategies. Vendor impact, specifically SaveOnFoods, shows a negative association with current price (coefficient = -0.61), indicating that coffee products from SaveOnFoods tend to be cheaper compared to Metro. Additionally, the month coefficient (0.06) implies a slight monthly variation in coffee pricing. The model's predictive performance is validated by low WAIC and LOOIC scores, and a small RMSE of 1.75, enhancing confidence in the reliability of its predictions.
+@tbl-model-summary indicates a strong fit with a high $R^2$ of 0.900, suggesting a strong explanatory power of the model regarding the variance in coffee product prices. The model's parameters show that the old price of coffee (coefficient = 0.77) has a significant positive influence on the current price, suggesting that past pricing trends are good predictors of current pricing strategies. Vendor impact, specifically SaveOnFoods, shows a negative association with current price (coefficient = -0.61), indicating that coffee products from SaveOnFoods tend to be cheaper compared to Metro. Additionally, the month coefficient (0.06) implies a slight monthly variation in coffee pricing. The model's predictive performance is validated by low WAIC and LOOIC scores, and a small RMSE of 1.75, enhancing confidence in the reliability of its predictions.
 
 @fig-credibility-interval llustrates the posterior distributions for the parameters in your Bayesian regression model, analyzing factors influencing coffee prices. The intercept shows a slight positive baseline effect. The old price of coffee strongly and positively affects the current price, indicating a direct relationship. The month variable shows a minimal and variable impact. SaveOnFoods, as a vendor, is associated with lower prices compared to Metro. The sigma parameter, indicating the model's error variance, shows a sharp and precise estimation, suggesting consistent variability in the data explained by the model.
 
@@ -322,7 +322,7 @@ modelsummary(
 
 ```{r}
 #| label: fig-credibility-interval
-#| fig-cap: "credibility interval"
+#| fig-cap: "Credibility Interval of Coffee products pricing"
 #| eval: true
 #| echo: false
 #| warning: false
@@ -336,19 +336,38 @@ plot(
 
 ```{r}
 #| label: fig-trace-plot
-#| fig-cap: "Trace plot"
+#| fig-cap: "Trace plot of Coffee products pricing"
 #| eval: true
 #| echo: false
 #| warning: false
 #| message: false
 
 plot(Coffee_product_pricing, "trace")
+```
+
+```{r}
+
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| label: fig-trace-plot
+#| fig-cap: "Trace plot of Party"
+#| fig-subcap: ["Trace plot of Intercept", "Trace plot of old_price", "Trace plot of month", "Trace plot of vendor: SaveOnFoods"]
+#| layout-ncol: 3
+
+
+plot(Coffee_product_pricing, "trace", "(Intercept)")
+plot(Coffee_product_pricing, "trace", "old_price")
+plot(Coffee_product_pricing, "trace", "month")
+plot(Coffee_product_pricing, "trace", "vendorSaveOnFoods")
+
 
 ```
 
 ```{r}
 #| label: fig-rhat-plot
-#| fig-cap: "R-hat plot"
+#| fig-cap: "R-hat plot of Coffee products pricing"
 #| eval: true
 #| echo: false
 #| warning: false
