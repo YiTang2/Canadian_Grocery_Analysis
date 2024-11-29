@@ -1,89 +1,60 @@
 #### Preamble ####
-# Purpose: Tests the structure and validity of the simulated Australian 
-  #electoral divisions dataset.
-# Author: Rohan Alexander
-# Date: 26 September 2024
-# Contact: rohan.alexander@utoronto.ca
+# Purpose: Tests the structure and validity of the simulated vendor's data 
+# Author: Yi Tang
+# Date: today
+# Contact: zachary.tang@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: 
   # - The `tidyverse` package must be installed and loaded
   # - 00-simulate_data.R must have been run
-# Any other information needed? Make sure you are in the `starter_folder` rproj
+# Any other information needed? None.
 
 
 #### Workspace setup ####
 library(tidyverse)
+library(testthat)
 
-analysis_data <- read_csv("data/00-simulated_data/simulated_data.csv")
+simulated_data <- read_csv("data/00-simulated_data/simulated_data.csv", show_col_types = FALSE)
+simulated_data$month <- as.integer(simulated_data$month)
+#### Testing Simulated Data ####
 
-# Test if the data was successfully loaded
-if (exists("analysis_data")) {
-  message("Test Passed: The dataset was successfully loaded.")
-} else {
-  stop("Test Failed: The dataset could not be loaded.")
-}
+# Test for correct column names
+test_that("simulated_data has correct column names", {
+  expect_named(simulated_data, c("Vendors", "current_price", "old_price", "month", "coffee_product"))
+})
 
+# Test column types
+test_that("Vendors column is of type character", {
+  expect_type(simulated_data$Vendors, "character")
+})
 
-#### Test data ####
+test_that("current_price column is of type double", {
+  expect_type(simulated_data$current_price, "double")
+})
 
-# Check if the dataset has 151 rows
-if (nrow(analysis_data) == 151) {
-  message("Test Passed: The dataset has 151 rows.")
-} else {
-  stop("Test Failed: The dataset does not have 151 rows.")
-}
+test_that("old_price column is of type double", {
+  expect_type(simulated_data$old_price, "double")
+})
 
-# Check if the dataset has 3 columns
-if (ncol(analysis_data) == 3) {
-  message("Test Passed: The dataset has 3 columns.")
-} else {
-  stop("Test Failed: The dataset does not have 3 columns.")
-}
+test_that("month column is of type integer", {
+  expect_type(simulated_data$month, "integer")
+})
 
-# Check if all values in the 'division' column are unique
-if (n_distinct(analysis_data$division) == nrow(analysis_data)) {
-  message("Test Passed: All values in 'division' are unique.")
-} else {
-  stop("Test Failed: The 'division' column contains duplicate values.")
-}
+# Test Vendors contains only "loblaws" and "metro"
+test_that("Vendors column contains only 'saveonfoods' and 'metro'", {
+  expect_setequal(unique(simulated_data$Vendors), Vendors)
+})
+# Test current_price range
+test_that("current_price values are within the range 0-500", {
+  expect_true(all(simulated_data$current_price >= 0 & simulated_data$current_price <= 500))
+})
 
-# Check if the 'state' column contains only valid Australian state names
-valid_states <- c("New South Wales", "Victoria", "Queensland", "South Australia", 
-                  "Western Australia", "Tasmania", "Northern Territory", 
-                  "Australian Capital Territory")
+# Test old_price range
+test_that("old_price values are within the range 0-1000", {
+  expect_true(all(simulated_data$old_price >= 0 & simulated_data$old_price <= 1000))
+})
 
-if (all(analysis_data$state %in% valid_states)) {
-  message("Test Passed: The 'state' column contains only valid Australian state names.")
-} else {
-  stop("Test Failed: The 'state' column contains invalid state names.")
-}
-
-# Check if the 'party' column contains only valid party names
-valid_parties <- c("Labor", "Liberal", "Greens", "National", "Other")
-
-if (all(analysis_data$party %in% valid_parties)) {
-  message("Test Passed: The 'party' column contains only valid party names.")
-} else {
-  stop("Test Failed: The 'party' column contains invalid party names.")
-}
-
-# Check if there are any missing values in the dataset
-if (all(!is.na(analysis_data))) {
-  message("Test Passed: The dataset contains no missing values.")
-} else {
-  stop("Test Failed: The dataset contains missing values.")
-}
-
-# Check if there are no empty strings in 'division', 'state', and 'party' columns
-if (all(analysis_data$division != "" & analysis_data$state != "" & analysis_data$party != "")) {
-  message("Test Passed: There are no empty strings in 'division', 'state', or 'party'.")
-} else {
-  stop("Test Failed: There are empty strings in one or more columns.")
-}
-
-# Check if the 'party' column has at least two unique values
-if (n_distinct(analysis_data$party) >= 2) {
-  message("Test Passed: The 'party' column contains at least two unique values.")
-} else {
-  stop("Test Failed: The 'party' column contains less than two unique values.")
-}
+# Test month range
+test_that("month values are within the range 1-12", {
+  expect_true(all(simulated_data$month >= 1 & simulated_data$month <= 12))
+})

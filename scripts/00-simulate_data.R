@@ -1,52 +1,34 @@
 #### Preamble ####
-# Purpose: Simulates a dataset of Australian electoral divisions, including the 
-  #state and party that won each division.
-# Author: Rohan Alexander
-# Date: 26 September 2024
-# Contact: rohan.alexander@utoronto.ca
+# Purpose: Simulates a dataset of coffee vendors
+# Author: Yi Tang
+# Date: today
+# Contact: zachary.tang@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: The `tidyverse` package must be installed
-# Any other information needed? Make sure you are in the `starter_folder` rproj
+# Any other information needed? None
+
 
 
 #### Workspace setup ####
 library(tidyverse)
-set.seed(853)
+set.seed(304)
 
 
 #### Simulate data ####
-# State names
-states <- c(
-  "New South Wales",
-  "Victoria",
-  "Queensland",
-  "South Australia",
-  "Western Australia",
-  "Tasmania",
-  "Northern Territory",
-  "Australian Capital Territory"
-)
+# Vendor names
+Vendors <- c("SaveOnFoods", "Metro")
 
-# Political parties
-parties <- c("Labor", "Liberal", "Greens", "National", "Other")
 
-# Create a dataset by randomly assigning states and parties to divisions
-analysis_data <- tibble(
-  division = paste("Division", 1:151),  # Add "Division" to make it a character
-  state = sample(
-    states,
-    size = 151,
-    replace = TRUE,
-    prob = c(0.25, 0.25, 0.15, 0.1, 0.1, 0.1, 0.025, 0.025) # Rough state population distribution
-  ),
-  party = sample(
-    parties,
-    size = 151,
-    replace = TRUE,
-    prob = c(0.40, 0.40, 0.05, 0.1, 0.05) # Rough party distribution
+# Generate simulated data
+simulated_data <- tibble(
+  Vendors = sample(c("Metro", "SaveOnFoods"), size = 1000, replace = TRUE),  # Assumed these are the vendor options
+  current_price = round(runif(1000, 0, 500), 3),
+  old_price = round(runif(1000, 0, 1000), 3),
+  month = sample(1:12, 1000, replace = TRUE),
+  coffee_product = sample(
+    c("Espresso Coffee", "Vanilla Coffee", "Caramel Coffee", "Dark Roast Coffee", "Decaf Coffee"),
+    size = 1000, replace = TRUE
   )
 )
-
-
 #### Save data ####
-write_csv(analysis_data, "data/00-simulated_data/simulated_data.csv")
+write_csv(simulated_data, "data/00-simulated_data/simulated_data.csv")
