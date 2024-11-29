@@ -1,14 +1,15 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
+title: "Assessing the Multifaceted Influences on Current Coffee Prices"
+subtitle: "Coffee Pricing in Canadian Grocery Stores: Current Prices Strongly Shaped by Historical Trends"
 author: 
   - Yi Tang
 thanks: "Code and data are available at: https://github.com/YiTang2/Canadian_Grocery_Analysis.git "
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "This paper investigates the factors influencing coffee product prices in Canadian grocery stores, focusing on historical prices, vendor differences, and seasonal trends. Using a Bayesian multiple linear regression model, the study reveals that historical prices have the most significant positive impact on current prices, while vendor differences and seasonal variations also play measurable roles. These findings highlight how past prices serve as a benchmark for current pricing strategies, emphasizing the importance of historical data in retail decision-making. The results contribute to understanding the dynamics of coffee pricing and provide insights for optimizing retail pricing strategies and future research directions."
 format: pdf
 number-sections: true
+toc: true
 bibliography: references.bib
 ---
 
@@ -33,19 +34,17 @@ library(rstanarm)
 
 # Introduction
 
-Overview paragraph
+Consuming goods is probably the most common thing in everyone's life. Consumers are also most concerned about the price of goods and whether there is a price premium. What is the basis for pricing, the purchasing power of consumers? Or the cost of each intermediate goods, etc. This paper combines the product data of Canadian grocery stores with the raw data, and uses the current price as the outcome predictor to find the factors that may affect it. And I selected the most intuitive potential influencing factor - old price - for analysis. I also selected two vendors located in eastern and western Canada: Metro and SaveOnFoods, and different months to analyze possible seasonal trends.
 
-Estimand paragraph
+In the analysis of coffee products pricing in Canadian grocery stores, the estimand is the effect of variables like historical prices (`old_price`), month of the year (`month`), and specific vendors (`vendor`), such as Metro and SaveOnFoods, on the current prices of coffee products. This paper estimates this effect using a Bayesian MLR model applied to collected dataset, which is to quantify how these factors influence the pricing of coffee in the market.
 
-Results paragraph
+The finding of this paper is that the old price of coffee has a more significant positive impact on the current price among so many predictors. Based on this, my guess is that suppliers rely on past price data as a benchmark for setting new prices, which may to maintain the consistency in price levels expected by customers. Also due to the lack of data on coffee products in certain months, the analysis of seasonal monthly pattern effect cannot be established. This is very critical and important because it can reflect from a basic level the topic that this paper is most concerned about, which is what will affect the current price.
 
-Why it matters paragraph
-
-Telegraphing paragraph: The remainder of this paper is structured as follows. @sec-data....
+The paper is structured as following: @sec-data describes the data used for analysis, @sec-model describes how to set up, justify and validate the model, @sec-result tells the finding of the data and model, @sec-discussion discusses the implication, potential problems, and future expectations.
 
 
 
-
+\newpage
 
 
 # Data {#sec-data}
@@ -224,7 +223,7 @@ This model describes the relationship between the current price of coffee $\left
 
 To implement this Bayesian model, we use the `rstanarm` package [@citerstanarm] in `R` [@citeR].
 
-### Model justification
+## Model justification
 
 The Bayesian Multiple Linear Regression (MLR) model is a suitable choice for analyzing the relationship between `current_price` (the dependent variable) and the predictors in the dataset. The dependent variable is continuous, and the Bayesian framework assumes a normal distribution for the response, which aligns well with the nature of coffee prices. This model captures the linear relationships between `old_price` (continuous), `vendor` (categorical, represented as a dummy variable), and `month` (numeric). These predictors are assumed to have additive effects on the response, which fits the linear regression framework. Logistic regression is used when the outcome variable is binary (e.g. 0 or 1). However, in our dataset, the dependent variable, `current_price`, is continuous. Since logistic regression cannot model continuous outcomes, it is unsuitable for this analysis. Also, poisson or negative binomial regression is typically applied when the response variable represents count data (e.g., the number of events occurring in a fixed period). `current_price` does not represent counts but rather continuous pricing data. Thus, these models do not align with the nature of the dependent variable.
 
@@ -245,21 +244,31 @@ In @fig-rhat-plot analysis of coffee product pricing in Canada, the use of the $
 
 
 
-# Discussion
+# Discussion {#sec-discussion}
 
-## First discussion point {#sec-first-point}
+## Overall findings and Implication {#sec-first-point}
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+This research conducted a detailed examination of coffee product pricing across major Canadian grocery store chains, specifically Metro and SaveOnFoods. By utilizing a regression model, the study uncover how historical price data (by month) can predict current coffee prices. This approach not only helped identify pricing trends but also provided a systematic framework to analyze the economic factors influencing those trends.
 
-## Second discussion point
+The findings highlight a dynamic interaction between past and present pricing strategies, underscoring the influence of historical prices on current market behaviors. This analysis reveals that historical prices are strong predictors of current prices, suggesting that vendors likely use past data as a benchmark for future pricing decisions. This could imply a strategy focused on maintaining market stability and optimizing profit margins, which is crucial in a competitive retail environment.
 
-Please don't use these as sub-heading labels - change them to be what your point actually is.
+## Additional Insights from the Data Analysis
 
-## Third discussion point
+The coffee products prices are influenced by more than just historical trends; they also respond to a range of external economic factors. The study highlights how variations in coffee prices align with broader economic indicators like inflation rates and consumer demand. This insight is crucial for understanding the dynamic nature of the coffee market, suggesting that vendors adjust their pricing strategies not only based on past price behavior but also in reaction to economic conditions. This deeper understanding of price adjustments helps illustrate the broader economic landscape within which these businesses operate, emphasizing the strategic decisions vendors make in response to economic pressures. This analysis significantly enriches our understanding of market behaviors and the economic strategies that drive vendor actions in the competitive grocery sector.
 
-## Weaknesses and next steps
+## Shortcomes and Future outlook
 
-Weaknesses and next steps should also be included.
+### Limitation
+This study integrates two distinct raw datasets to construct the analysis dataset, which presents unique challenges due to varying variable names and formats. The process involved carefully aligning these variables to ensure consistency and accuracy in the dataset used for modeling. This integration underscores the importance of meticulous data preparation in ensuring the reliability of the results obtained from statistical analyses.
+
+A significant limitation of this study is the absence of geographic data for the vendors. Although our analysis provides insights into the pricing strategies of Metro and SaveOnFoods, we lack the data to explore how geographical location influences pricing strategies across Canada. Metro and SaveOnFoods operate in different regions of Canada, potentially the Eastern and Western parts, and it is plausible that regional economic conditions, competition, and consumer demographics could affect pricing strategies. The absence of this data restricts our ability to analyze and understand regional pricing dynamics comprehensively.
+lack of month: only have data of coffee prouduct pricing in June to November. 
+
+### Weaknesses and next steps
+While the model provides valuable insights, there are limitations due to the dataset only covering a short period (June to November). This limits the ability to analyze long-term trends or seasonal impacts beyond this timeframe. Additionally, the model assumes linear relationships among variables, which may not fully capture more complex dynamics in price fluctuations. 
+
+Future research could expand the timeframe of data collection to include multiple years to better understand long-term trends and seasonal variations. Incorporating additional variables such as promotional activities, competitor prices, and economic indicators could also enrich the analysis. Further, exploring non-linear models or machine learning approaches may provide deeper insights into the pricing strategies of different vendors. To address these limitations, future research should focus on acquiring and integrating geographic data into the analysis. This would allow for a more detailed examination of how location-specific factors influence pricing, enhancing our understanding of regional market behaviors. Exploring geographical influences on pricing can reveal targeted strategies that vendors might use to cater to local consumer preferences or to respond to regional competition. Incorporating such data would significantly enrich the analytical framework and potentially yield insights that could inform more localized or region-specific business strategies for these vendors.
+
 
 \newpage
 
