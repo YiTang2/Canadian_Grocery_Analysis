@@ -29,44 +29,66 @@ library(kableExtra)
 library(gridExtra)
 library(modelsummary)
 library(rstanarm)
+library(styler)
 ```
-
-
-# Introduction
-
-Consuming goods is probably the most common thing in everyone's life. Consumers are also most concerned about the price of goods and whether there is a price premium. What is the basis for pricing, the purchasing power of consumers? Or the cost of each intermediate goods, etc. This paper combines the product data of Canadian grocery stores with the raw data, and uses the current price as the outcome predictor to find the factors that may affect it. And I selected the most intuitive potential influencing factor - old price - for analysis. I also selected two vendors located in eastern and western Canada: Metro and SaveOnFoods, and different months to analyze possible seasonal trends.
-
-In the analysis of coffee products pricing in Canadian grocery stores, the estimand is the effect of variables like historical prices (`old_price`), month of the year (`month`), and specific vendors (`vendor`), such as Metro and SaveOnFoods, on the current prices of coffee products. This paper estimates this effect using a Bayesian MLR model applied to collected dataset, which is to quantify how these factors influence the pricing of coffee in the market.
-
-The finding of this paper is that the old price of coffee has a more significant positive impact on the current price among so many predictors. Based on this, my guess is that suppliers rely on past price data as a benchmark for setting new prices, which may to maintain the consistency in price levels expected by customers. Also due to the lack of data on coffee products in certain months, the analysis of seasonal monthly pattern effect cannot be established. This is very critical and important because it can reflect from a basic level the topic that this paper is most concerned about, which is what will affect the current price.
-
-The paper is structured as following: @sec-data describes the data used for analysis, @sec-model describes how to set up, justify and validate the model, @sec-result tells the finding of the data and model, @sec-discussion discusses the implication, potential problems, and future expectations.
 
 
 
 \newpage
+
+# Introduction
+
+Consuming goods is an integral part of everyone’s daily life, with pricing being a major factor that influences consumer behavior.[@arnot2006ethical] People are particularly interested in the price of goods, and whether there is a price premium or discount. What determines these prices? Is it the purchasing power of consumers, or perhaps the cost associated with each stage of production? This paper seeks to answer some of these questions by combining product data from Canadian grocery stores with additional raw data to identify key factors that influence product pricing. Specifically, we focus on coffee products and use the current price as the outcome variable, aiming to understand the influences behind it.
+
+To explore this, I chose one of the most intuitive factors: the old price, since historical pricing often influences how vendors set current prices. Additionally, I included data from two vendors—Metro and SaveOnFoods—located in different parts of Canada to investigate any differences in pricing strategies between the eastern and western regions. The inclusion of month allows us to explore potential seasonal trends in coffee pricing, assessing whether specific times of the year see significant price variations.
+
+In this study of coffee pricing strategies in Canadian grocery stores, the focus is on estimating how historical prices (old price), time of year (month), and vendor characteristics (vendor) affect current coffee prices. Using a Bayesian multiple linear regression model, I estimated these effects to better understand the pricing dynamics of coffee products and to determine how much each factor contributes to pricing decisions in the market.
+
+The findings reveal that the old price has the most significant positive impact on current coffee prices among all the predictors considered. This suggests that vendors heavily rely on historical prices when determining current prices, possibly to maintain a level of consistency that consumers expect. Due to a lack of data for some months, it was challenging to establish a definitive analysis of seasonal trends, though this aspect remains an important factor for understanding pricing behavior comprehensively.
+
+The paper is structured as following: @sec-data describes the data used for analysis, @sec-model describes how to set up, justify and validate the model, @sec-result tells the finding of the data and model, @sec-discussion discusses the implication, potential problems, and future expectations.
+
 
 
 # Data {#sec-data}
 
 ## Overview
 
-Price of each month's coffee of different vendors data is provided by[@citedata]. This dataset records detailed sales about fast-moving consumer goods (FMCG) sold by various vendors, including volia, T&T, Loblaws, SaveOnFoods, Galleria, Metro, NoFrills and Walmart. It is also includes product-level details, such as the product name, current price, historical price (`old_price`), and the corresponding units and price per unit. The data also captures time-specific observations(2024-2-28 to 2024-6-22), with timestamps (nowtime) that can be used to analyze trends over days or months.
+Price of each month's coffee of different vendors data is provided by[@citedata]. This dataset records detailed sales about fast-moving consumer goods (FMCG) sold by various vendors, including volia, T&T, Loblaws, SaveOnFoods, Galleria, Metro, NoFrills and Walmart. It is also includes product-level details, such as the product name, current price, historical price (old price), and the corresponding units and price per unit. The data also captures time-specific observations(2024-2-28 to 2024-6-22), with timestamps (nowtime) that can be used to analyze trends over days or months.
 
-In order to simulate data, test simulated data, clean data, test cleaned data, exploratory data analysis and model data, we used R programming language [@citeR] to analyze the data and plot the graphs. Specific libraries that assisted the analysis include `tidyverse` [@citetidyverse], `palmerpenguins` [@palmerpenguins], `knitr` [@citeknitr], `arrow` [@citearrow], `ggplot2` [@citeggplot2],  `dplyr` [@citedplyr],  `here` [@citehere], `kableExtra` [@citekableExtra], `gridExtra`[@citegridExtra], `modelsummary`[@citemodelsummary], `rstanarm`[@citerstanarm].
+In order to simulate data, test simulated data, clean data, test cleaned data, exploratory data analysis and model data, we used R programming language [@citeR] to analyze the data and plot the graphs. The folder structure for this paper follows the startup folder created by [@rohan]. It is very helpful in keeping everything organized. I also referenced many of the examples and techniques provided by Telling Stories with Data [@alexander2023telling], which helped me understand how to visualize the data and communicate the findings effectively. Specific libraries that assisted the analysis include `tidyverse` [@citetidyverse], `knitr` [@citeknitr], `arrow` [@citearrow], `ggplot2` [@citeggplot2],  `dplyr` [@citedplyr],  `here` [@citehere], `kableExtra` [@citekableExtra], `gridExtra`[@citegridExtra], `modelsummary`[@citemodelsummary], `rstanarm`[@citerstanarm].
 
-The inspiration for my data processing came from my desire to study what factors would affect the current price of coffee products from two vendors in different regions of Canada, such as the current price of coffee products from two vendors, Metro and SaveOnFoods. The following variables are the data I selected after cleaning the data:
-
-- `vendor`: The retailer selling the product in Canada.
-- `old_price`: The historical price of the product, showing previous pricing or discounts.
-- `product_name`: The specific product being sold, providing product-level insights.
-- `current_price`: The price of the product at the time of observation.
-
-New variable extracted and transformed from raw data:
-
-- `month`: The month of data collection, extracted from `nowtime`.
+The inspiration for my data processing came from my desire to study what factors would affect the current price of coffee products from two vendors in different regions of Canada, such as the current price of coffee products from two vendors, Metro and SaveOnFoods. @tbl-variable are the data I selected after cleaning the data, and new variable `month` extracted and transformed from raw data also.
 
 Since the variable nowtime only records 4 months, it is considered a lack of Long-Term Trends, which means it's difficult to identify long-term pricing or demand patterns by using short data periods. So I only extracted a new variable—month from date of nowtime, which can simplify temporal analysis and identify trends, such as seasonal monthly pattern with price changes or demand patterns. It allows grouping data for monthly aggregation and supporting seasonality-focused insights or forecasting models.
+
+
+```{r}
+#| label: tbl-variable
+#| tbl-cap: "Variables and their Definitions for the Coffee Product Pricing."
+#| echo: false
+#| message: false
+#| warning: false
+#| tbl-pos: H
+
+# Define the table with adjusted column widths and formatting
+variable_table <- data.frame(
+  Variable = c("vendor", "old price", "current price", "product name", "month"),
+  Definition = c(
+    "The retailer selling the product in Canada.",
+    "The historical price of the product, showing previous pricing or discounts.",
+    "The price of the product at the time of observation..",
+    "The specific product being sold, providing product-level insights",
+    "The month of data collection, extracted from 'nowtime'"
+  )
+)
+
+
+kable(variable_table, col.names = c("Variable", "Definition"),
+      format = "latex", booktabs = TRUE, linesep = "") %>%
+  column_spec(1, bold = TRUE, width = "15em") %>%
+  column_spec(2, width = "20em")  # Adjust the width to allow for more text in the definition column
+```
 
 To provide an preview of the coffee pricing with all potential factors that might affect it. Here, @tbl-sample-analysis-data simply reveals the variation between current price and old price in June for Metro's coffee products.
 
@@ -97,9 +119,9 @@ preview_table |>
 
 ## Measurement
 
-The dataset from Hammer represents real-world retail activities, capturing product details, vendor listings, and price updates. When vendors update product information, such as pricing or availability, Hammer collects and structures this information into the dataset.
+The dataset from Hammer provides a comprehensive representation of real-world retail activities, capturing key elements such as product details, vendor listings, and price updates. When vendors make updates to product information, including pricing changes or availability adjustments, Hammer gathers and organizes this data into a structured dataset. This ensures that the dataset remains accurate and reflective of current retail conditions.
 
-Key fields include vendor, product name, current price, old price, and nowtime. The data is collected through scraping and structured to enable analysis of retail trends, pricing strategies, and market dynamics over time. Each entry serves as a snapshot of a product's presence in the market at a specific time, allowing for focused analyses, like tracking price trends for specific products (e.g., coffee).
+The dataset includes essential fields such as vendor, product name, current price, old price, and a timestamp referred to as nowtime. The data is collected through scraping and is systematically structured to support an in-depth analysis of retail trends, pricing strategies, and overall market dynamics across different periods. Each record captures a snapshot of a product’s market presence at a given time, enabling targeted analyses like monitoring price fluctuations for specific products, such as coffee. By offering such detailed and time-specific information, the dataset provides a valuable foundation for understanding the evolving dynamics of retail pricing and vendor strategies.
 
 ## Data Visualization
 
@@ -191,25 +213,33 @@ ggplot(analysis_data, aes(x = vendor, y = current_price)) +
 
 @fig-Bar-plot-of-old-price highlights how each vendor prices their products within the market. It shows that both vendors offer a wide range of prices, yet the spread and density of the data points may indicate Metro’s pricing strategy targets both lower and upper market segments, whereas SaveOnFoods might be focusing on a specific niche.
 
+## Outcome variables
+
+The outcome variable for this analysis is the current price of coffee products. This variable is crucial for understanding the dynamics of pricing in the retail market, as it reflects the final cost faced by consumers. Analyzing the current price helps uncover patterns in how vendors adjust prices over time, respond to market conditions, and compete in a fluctuating retail environment. By focusing on the current price, we can measure the impact of historical trends, vendor-specific strategies, and seasonal changes on pricing decisions.
+
+## Predictor variables
+
+The predictor variables selected from the raw dataset are old price, month, and vendor. The old price serves as a predictor because it provides valuable insight into how past pricing decisions influence current prices. Vendors often make incremental adjustments based on historical pricing data, consumer behavior, and market reactions, which makes it a key factor in understanding pricing strategies. Month is included to account for possible seasonal trends in pricing, as consumer demand and promotional activities often vary throughout the year, potentially impacting coffee prices. Lastly, vendor is used to examine pricing variations between Metro and SaveOnFoods. Each vendor may have distinct pricing approaches based on factors like target market, cost structures, or regional positioning, and including this variable enables a comparative analysis of vendor-specific pricing dynamics.
+
 # Model {#sec-model} 
 
-The goal of our Bayesian multiple linear regression is to investigate the factors that influence the current price of coffee in our dataset. Specifically, we try7  to understand how historical pricing, vendor differences, and seasonal monthly pattern affect current coffee prices.
+The goal of our Bayesian multiple linear regression is to investigate the factors that influence the current price of coffee in our dataset. Specifically, we try  to understand how historical pricing, vendor differences, and seasonal monthly pattern affect current coffee prices.
 
 ## Model set-up
 
 Define $y_i$ as the current price of coffee for the $i$-th observation in the dataset. The predictors include:
 
-- $x_{1i}$, the old price of the coffee,
-- $x_{2i}$, dummy variable for the vendor, where:\
-$x_{2i}$ = 1: Vendor is "SaveOnFoods"; 
-$x_{2i}$ = 0: Vendor is "Metro",
-- $x_{3i}$, the numeric month variable.
+- $X_{\text{Old Price},i}$, the old price of the coffee,
+- $X_{\text{Vendor},i}$, dummy variable for the vendor, where:\
+$X_{\text{Vendor},i}$ = 1: Vendor is "SaveOnFoods"; 
+$X_{\text{Vendor},i}$ = 0: Vendor is "Metro",
+- $X_{\text{Month},i}$, the numeric month variable.
 
 The model is formulated as follows:
 
 \begin{align} 
 y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma), \\
-\mu_i &= \alpha + \beta_1 \cdot x_{1i} + \beta_2 \cdot x_{2i} + \beta_3 \cdot x_{3i}, \\
+\mu_i &= \alpha + \beta_1 \cdot X_{\text{Old Price},i} + \beta_2 \cdot X_{\text{Vendor},i} + \beta_3 \cdot X_{\text{Month},i}, \\
 \alpha &\sim \mbox{Normal}(0, 2.5), \\
 \beta_1 &\sim \mbox{Normal}(0, 2.5), \\ 
 \beta_2 &\sim \mbox{Normal}(0, 2.5), \\
@@ -218,14 +248,14 @@ y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma), \\
 \end{align}
 
 
-This model describes the relationship between the current price of coffee $\left(y_i\right)$ and three predictors: the old price of coffee $\left(x_{1 i}\right)$, a categorical vendor variable $\left(x_{2 i}\right)$ indicating whether the vendor is "Metro" or "SaveOnFoods," and a numeric variable for the month $\left(x_{3 i}\right)$. The response variable $\left(y_i\right)$ is modeled as normally distributed with mean $\mu_i$ and standard deviation $\sigma$. The mean $\mu_i$ is defined as a linear combination of these predictors, with coefficients $\beta_1, \beta_2$, and $\beta_3$, and an intercept $\alpha$. Prior distributions for the parameters are specified, including normal priors for $\alpha$ and the coefficients, and an exponential prior for $\sigma$. Intercept $\alpha$ represents the baseline mean current price for Metro if $x_{2i}$ = 1; otherwise when $x_{2i}$ = 0, it represents the mean current price for SaveOnFoods. Also, when old price and month is equal to 0, the intercept is not meaningful. Coefficient $\beta_1$ captures how changes in the old price affect the current price. Coefficient $\beta_2$ measures the difference in the mean coffee price between SaveOnFoods ($x_{2i}$ = 1) and Metro ($x_{2i}$ = 0). Coefficient $\beta_3$ reflects how the month influences current pricing, potentially capturing seasonal effects. 
+This model describes the relationship between the current price of coffee $y_i$ and three predictors: the old price of coffee $X_{\text{Old Price},i}$, a categorical vendor variable $X_{\text{Vendor},i}$ indicating whether the vendor is "Metro" or "SaveOnFoods," and a numeric variable for the month $X_{\text{Month},i}$. The response variable $y_i$ is modeled as normally distributed with mean $\mu_i$ and standard deviation $\sigma$. The mean $\mu_i$ is defined as a linear combination of these predictors, with coefficients $\beta_1, \beta_2$, and $\beta_3$, and an intercept $\alpha$. Prior distributions for the parameters are specified, including normal priors for $\alpha$ and the coefficients, and an exponential prior for $\sigma$. Intercept $\alpha$ represents the baseline mean current price for Metro if $X_{\text{Vendor},i}$ = 1; otherwise when $X_{\text{Vendor},i}$ = 0, it represents the mean current price for SaveOnFoods. Also, when old price and month is equal to 0, the intercept is not meaningful. Coefficient $\beta_1$ captures how changes in the old price affect the current price. Coefficient $\beta_2$ measures the difference in the mean coffee price between SaveOnFoods ($X_{\text{Vendor},i}$ = 1) and Metro ($X_{\text{Vendor},i}$ = 0). Coefficient $\beta_3$ reflects how the month influences current pricing, potentially capturing seasonal effects. 
 
 
 To implement this Bayesian model, we use the `rstanarm` package [@citerstanarm] in `R` [@citeR].
 
 ## Model justification
 
-The Bayesian Multiple Linear Regression (MLR) model is a suitable choice for analyzing the relationship between `current_price` (the dependent variable) and the predictors in the dataset. The dependent variable is continuous, and the Bayesian framework assumes a normal distribution for the response, which aligns well with the nature of coffee prices. This model captures the linear relationships between `old_price` (continuous), `vendor` (categorical, represented as a dummy variable), and `month` (numeric). These predictors are assumed to have additive effects on the response, which fits the linear regression framework. Logistic regression is used when the outcome variable is binary (e.g. 0 or 1). However, in our dataset, the dependent variable, `current_price`, is continuous. Since logistic regression cannot model continuous outcomes, it is unsuitable for this analysis. Also, poisson or negative binomial regression is typically applied when the response variable represents count data (e.g., the number of events occurring in a fixed period). `current_price` does not represent counts but rather continuous pricing data. Thus, these models do not align with the nature of the dependent variable.
+The Bayesian Multiple Linear Regression (MLR) model is a suitable choice for analyzing the relationship between `current price` (the dependent variable) and the predictors in the dataset. The dependent variable is continuous, and the Bayesian framework assumes a normal distribution for the response, which aligns well with the nature of coffee prices. This model captures the linear relationships between `old price` (continuous), `vendor` (categorical, represented as a dummy variable), and `month` (numeric). These predictors are assumed to have additive effects on the response, which fits the linear regression framework. Logistic regression is used when the outcome variable is binary (e.g. 0 or 1). However, in our dataset, the dependent variable, `current price`, is continuous. Since logistic regression cannot model continuous outcomes, it is unsuitable for this analysis. Also, poisson or negative binomial regression is typically applied when the response variable represents count data (e.g., the number of events occurring in a fixed period). `current_price` does not represent counts but rather continuous pricing data. Thus, these models do not align with the nature of the dependent variable.
 
 ## Model validation
 
@@ -252,7 +282,7 @@ This research conducted a detailed examination of coffee product pricing across 
 
 The findings highlight a dynamic interaction between past and present pricing strategies, underscoring the influence of historical prices on current market behaviors. This analysis reveals that historical prices are strong predictors of current prices, suggesting that vendors likely use past data as a benchmark for future pricing decisions. This could imply a strategy focused on maintaining market stability and optimizing profit margins, which is crucial in a competitive retail environment.
 
-## Additional Insights from the Data Analysis
+## Additional understanding from the Data Analysis
 
 The coffee products prices are influenced by more than just historical trends; they also respond to a range of external economic factors. The study highlights how variations in coffee prices align with broader economic indicators like inflation rates and consumer demand. This insight is crucial for understanding the dynamic nature of the coffee market, suggesting that vendors adjust their pricing strategies not only based on past price behavior but also in reaction to economic conditions. This deeper understanding of price adjustments helps illustrate the broader economic landscape within which these businesses operate, emphasizing the strategic decisions vendors make in response to economic pressures. This analysis significantly enriches our understanding of market behaviors and the economic strategies that drive vendor actions in the competitive grocery sector.
 
@@ -275,6 +305,26 @@ Future research could expand the timeframe of data collection to include multipl
 \appendix
 
 # Appendix {-}
+
+# Idealized Survey and Methodology
+
+To address the collection of data regarding coffee prices through an idealized survey and methodology, we have meticulously designed a survey that aligns with best practices in research and data collection[@citedata]. The survey begins with an introductory section, welcoming participants to the "Coffee Price Insights Survey." This introduction serves to inform respondents of the purpose of the survey, which is to gather data on coffee prices across different regions to analyze market trends and pricing strategies. The introduction reassures participants of the value and importance of their input and provides an estimated completion time of 5 minutes.
+
+Contact information for the survey overseer is clearly listed, with Dr. Jane Brewer as the point of contact, providing her email and a contact number to ensure respondents can reach out with questions or require further assistance. This transparency builds trust and aids in increasing response rates.
+
+The survey itself comprises a series of well-constructed questions designed to gather comprehensive data while being easy to understand and respond to. It starts with basic multiple-choice questions regarding where respondents buy their coffee and how frequently. This is followed by checkbox options for the type of coffee they purchase, allowing for multiple selections to capture all preferences. The survey progresses to more detailed questions, such as ranking their preferred coffee brands and disclosing their monthly coffee expenditure through an open-ended question. Additionally, a simple yes/no question about noticing seasonal price variations is included to gather data on temporal pricing trends.
+
+Each question is strategically ordered from the most straightforward to the more detailed to prevent respondent fatigue and ensure logical flow, maintaining engagement throughout the survey. The varied types of questions (multiple-choice, checkboxes, ranking, open-ended, and binary) cater to different data needs and enhance the richness of the data collected, making the analysis more robust.
+
+The survey concludes with a thank-you section, expressing gratitude to the respondents for their time and insights, which reinforces the value of their contribution and ends the survey on a positive note.
+
+For the methodology, a stratified sampling strategy is employed to ensure a diverse and representative sample by dividing the population into subgroups based on geographical regions. This approach not only improves the generalizability of the results but also allows for detailed analysis of regional variations in coffee prices. Data collection is conducted via an online survey platform, chosen for its wide reach and efficiency, as well as its built-in data validation features to ensure accuracy in the responses gathered.
+
+Data analysis involves quantitative techniques to assess pricing trends and consumer behavior, utilizing statistical software for precision. Qualitative responses from open-ended questions undergo thematic analysis to uncover deeper insights. This comprehensive analysis approach ensures that both numerical data and rich textual data are effectively utilized.
+
+The overall survey design and methodology are grounded in the literature on survey research, drawing from established frameworks and studies that underscore the effectiveness of such approaches. Additionally, preliminary simulations using historical data are conducted to test and refine the survey and sampling strategy, ensuring that the actual data collection is as effective and efficient as possible.
+
+This idealized survey and methodology framework is not only methodically sound and strategically designed but also extensively planned to achieve detailed insights into coffee pricing, thereby fulfilling the objectives set out for this research initiative.
 
 # Model details
 ```{r}
@@ -322,7 +372,7 @@ modelsummary(
 
 ```{r}
 #| label: fig-credibility-interval
-#| fig-cap: "Credibility Interval of Coffee products pricing"
+#| fig-cap: "credibility interval"
 #| eval: true
 #| echo: false
 #| warning: false
@@ -330,20 +380,12 @@ modelsummary(
 
 plot(
   Coffee_product_pricing,
-  "areas"
+  "areas",
+  pars = c("old_price", "month", "vendorSaveOnFoods")
 )
 ```
 
-```{r}
-#| label: fig-trace-plot
-#| fig-cap: "Trace plot of Coffee products pricing"
-#| eval: true
-#| echo: false
-#| warning: false
-#| message: false
 
-plot(Coffee_product_pricing, "trace")
-```
 
 ```{r}
 
@@ -354,7 +396,7 @@ plot(Coffee_product_pricing, "trace")
 #| label: fig-trace-plot
 #| fig-cap: "Trace plot of Party"
 #| fig-subcap: ["Trace plot of Intercept", "Trace plot of old_price", "Trace plot of month", "Trace plot of vendor: SaveOnFoods"]
-#| layout-ncol: 3
+#| layout-ncol: 2
 
 
 plot(Coffee_product_pricing, "trace", "(Intercept)")

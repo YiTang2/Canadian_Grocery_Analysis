@@ -20,28 +20,34 @@ product_data <- read_csv("data/01-raw_data/hammer-4-product.csv", show_col_types
 # Combine and clean the data
 combined_data <- raw_data |>
   inner_join(product_data, by = c("product_id" = "id")) |>
-  select(nowtime, 
-         vendor, 
-         product_id, 
-         product_name, 
-         brand, 
-         current_price, 
-         old_price, 
-         units, 
-         price_per_unit)
+  select(
+    nowtime,
+    vendor,
+    product_id,
+    product_name,
+    brand,
+    current_price,
+    old_price,
+    units,
+    price_per_unit
+  )
 
 
 cleaned_data <- combined_data |>
   filter(vendor %in% c("Metro", "SaveOnFoods")) |>
   select(vendor, product_name, current_price, old_price, nowtime) |>
-  mutate(month = month(nowtime),
-         current_price = parse_number(current_price),
-         old_price = parse_number(old_price)) |>
+  mutate(
+    month = month(nowtime),
+    current_price = parse_number(current_price),
+    old_price = parse_number(old_price)
+  ) |>
   filter(str_detect(tolower(product_name), "coffee")) |>
   select(vendor, product_name, current_price, old_price, month) |>
   tidyr::drop_na() |>
   distinct()
 
 #### Save data ####
-write_parquet(x = cleaned_data,
-              sink = "data/02-analysis_data/analysis_data.parquet")
+write_parquet(
+  x = cleaned_data,
+  sink = "data/02-analysis_data/analysis_data.parquet"
+)

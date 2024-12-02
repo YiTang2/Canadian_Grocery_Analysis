@@ -1,12 +1,12 @@
 #### Preamble ####
-# Purpose: Tests the structure and validity of the simulated vendor's data 
+# Purpose: Tests the structure and validity of the simulated vendor's data
 # Author: Yi Tang
 # Date: today
 # Contact: zachary.tang@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: 
-  # - The `tidyverse` package must be installed and loaded
-  # - 00-simulate_data.R must have been run
+# Pre-requisites:
+# - The `tidyverse` package must be installed and loaded
+# - 00-simulate_data.R must have been run
 # Any other information needed? None.
 
 
