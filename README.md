@@ -15,7 +15,7 @@ The repo is structured as:
 -   `model` contains fitted models for data and API which allows the user to enter input and get a predicted price.
 -   `other` contains relevant literature and sketches.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
--   `scripts` contains the R scripts used to simulate, download and clean data.
+-   `scripts` contains the R scripts used to simulate (00-simulate_data.R), test simulated data (01-test_simulated_data.R), clean (02-clean_data.R), test cleaned data (03-test_analysis_data.R), EDA (04-exploratory_data_analysis.R) and model (05-model_data.R).
 
 
 ## Statement on LLM usage
