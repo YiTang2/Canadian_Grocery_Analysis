@@ -45,7 +45,7 @@ cleaned_data <- combined_data |>
   select(vendor, product_name, current_price, old_price, month) |>
   tidyr::drop_na() |>
   distinct()
-
+write_csv(cleaned_data, "data/02-analysis_data/analysis_data.csv")
 #### Save data ####
 write_parquet(
   x = cleaned_data,

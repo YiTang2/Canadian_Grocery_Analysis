@@ -18,6 +18,7 @@ bibliography: references.bib
 #| warning: false
 #| message: false
 
+library(caret)
 library(tidyverse)
 library(knitr)
 library(arrow)
@@ -37,34 +38,35 @@ library(styler)
 
 # Introduction
 
-Consuming goods is an integral part of everyone’s daily life, with pricing being a major factor that influences consumer behavior.[@huang2014promote] People are particularly interested in the price of goods[@arnot2006ethical], and whether there is a price premium or discount. What determines these prices? Is it the purchasing power of consumers, or perhaps the cost associated with each stage of production? This paper seeks to answer some of these questions by combining product data from Canadian grocery stores with additional raw data to identify key factors that influence product pricing. Specifically, we focus on coffee products and use the current price as the outcome variable, aiming to understand the influences behind it.
+Consuming goods is an integral part of everyone’s daily life, with pricing being a major factor that influences consumer behavior.[@huang2014promote] People are particularly interested in the price of goods[@arnot2006ethical], and whether there is a price premium or discount. What determines these prices? Is it the purchasing power of consumers, or perhaps the cost associated with each stage of production? This paper seeks to answer some of these questions by combining product data from Canadian grocery stores with additional raw data to identify key factors that influence product pricing. Specifically, we focus on coffee products and use the current price as the outcome variable, trying to understand the influences behind it.
 
-To explore this, I chose one of the most intuitive factors: the old price, since historical pricing often influences how vendors set current prices. Additionally, I included data from two vendors—Metro and SaveOnFoods—located in different parts of Canada to investigate any differences in pricing strategies between the eastern and western regions. The inclusion of month allows us to explore potential seasonal trends in coffee pricing, assessing whether specific times of the year see significant price variations.
+To explore this, I chose one of the most intuitive factors: the old price, since historical pricing often influences how vendors set current prices. The relationship between previous and current pricing can provide observation into whether vendors maintain consistency or adjust prices in response to market conditions. Additionally, I included data from two vendors—Metro and SaveOnFoods—located in different parts of Canada to investigate any differences in pricing strategies between the eastern and western regions. This distinction between vendors allows us to better understand regional variations and how local competition might impact pricing. The inclusion of the month variable allows us to explore potential seasonal trends in coffee pricing, assessing whether specific times of the year see significant price variations, possibly due to fluctuations in demand or promotional campaigns. By evaluating these factors, we can determine the extent to which historical pricing, regional differences, and seasonality drive current pricing decisions in the coffee market.
 
-In this study of coffee pricing strategies in Canadian grocery stores, the focus is on estimating how historical prices (old price), time of year (month), and vendor characteristics (vendor) affect current coffee prices. Using a Bayesian multiple linear regression model, I estimated these effects to better understand the pricing dynamics of coffee products and to determine how much each factor contributes to pricing decisions in the market.
+In this study of coffee pricing strategies in Canadian grocery stores, the focus is on estimating how historical prices (old price), time of year (month), and vendor characteristics (vendor) affect current coffee prices. Using a Bayesian multiple linear regression model, I estimated these effects to better understand the pricing dynamics of coffee products and to determine how much each factor contributes to pricing decisions in the market. This modeling approach provides a probabilistic framework that accounts for uncertainty in the estimates, allowing for more nuanced conclusions compared to traditional methods.
 
-The findings reveal that the old price has the most significant positive impact on current coffee prices among all the predictors considered. This suggests that vendors heavily rely on historical prices when determining current prices, possibly to maintain a level of consistency that consumers expect. Due to a lack of data for some months, it was challenging to establish a definitive analysis of seasonal trends, though this aspect remains an important factor for understanding pricing behavior completely.
+The findings reveal that the old price has the most significant positive impact on current coffee prices among all the predictors considered. This suggests that vendors heavily rely on historical prices when determining current prices, possibly to maintain a level of consistency that consumers expect. Consistency in pricing is often valued by consumers, as it fosters a sense of trust and predictability. Due to a lack of data for some months, it was challenging to establish a definitive analysis of seasonal trends, though this aspect remains an important factor for understanding pricing behavior comprehensively. Seasonal patterns can have substantial effects on consumer behavior, and thus their absence in the dataset may limit the scope of understanding regarding periodic fluctuations in coffee prices.
 
-The paper is structured as following: @sec-data describes the data used for analysis, @sec-model describes how to set up, justify and validate the model, @sec-result tells the finding of the data and model, @sec-discussion discusses the implication, potential problems, and future expectations.
-
+The paper is structured as follows: @sec-data describes the data used for analysis, providing details on data collection methods and any preprocessing required. @sec-model discusses how to set up, justify, and validate the Bayesian multiple linear regression model, explaining the rationale for selecting this approach and detailing the assumptions made. @sec-result presents the findings derived from the data and model, highlighting the main effects and relationships observed. Finally, @sec-discussion delves into the implications of the results, addresses potential limitations, and outlines expectations for future research, considering how expanding the dataset or incorporating additional variables might enhance our understanding of coffee pricing dynamics.
 
 
 # Data {#sec-data}
 
-## Overview
+## Data Source
 
 Price of each month's coffee of different vendors data is provided by[@citedata]. This dataset records detailed sales about fast-moving consumer goods (FMCG) sold by various vendors, including volia, T&T, Loblaws, SaveOnFoods, Galleria, Metro, NoFrills and Walmart. It is also includes product-level details, such as the product name, current price, historical price (old price), and the corresponding units and price per unit. The data also captures time-specific observations(2024-2-28 to 2024-6-22), with timestamps (nowtime) that can be used to analyze trends over days or months.
 
-In order to simulate data, test simulated data, clean data, test cleaned data, exploratory data analysis and model data, we used R programming language [@citeR] to analyze the data and plot the graphs. The folder structure for this paper follows the startup folder created by [@rohan]. It is very helpful in keeping everything organized. I also referenced many of the examples and techniques provided by Telling Stories with Data [@alexander2023telling], which helped me understand how to visualize the data and communicate the findings effectively. Specific libraries that assisted the analysis include `tidyverse` [@citetidyverse], `knitr` [@citeknitr], `arrow` [@citearrow], `ggplot2` [@citeggplot2],  `dplyr` [@citedplyr],  `here` [@citehere], `kableExtra` [@citekableExtra], `gridExtra`[@citegridExtra], `modelsummary`[@citemodelsummary], `rstanarm`[@citerstanarm].
+## Inspiration on data organization
 
-The inspiration for my data processing came from my desire to study what factors would affect the current price of coffee products from two vendors in different regions of Canada, such as the current price of coffee products from two vendors, Metro and SaveOnFoods. @tbl-variable are the data I selected after cleaning the data, and new variable `month` extracted and transformed from raw data also.
+In order to simulate data, test simulated data, clean data, test cleaned data, exploratory data analysis and model data, we used R programming language [@citeR] to analyze the data and plot the graphs. The folder structure for this paper follows the startup folder created by [@rohan]. It is very helpful in keeping everything organized. I also referenced many of the examples and techniques provided by Telling Stories with Data [@alexander2023telling], which helped me understand how to visualize the data and communicate the findings effectively. Specific libraries that assisted the analysis include `tidyverse` [@citetidyverse],`caret`[@citecaret], `janitor`[@citejanitor], `lubridate`[@citelubridate],  `knitr` [@citeknitr], `arrow` [@citearrow], `ggplot2` [@citeggplot2],  `dplyr` [@citedplyr],  `here` [@citehere], `kableExtra` [@citekableExtra], `gridExtra`[@citegridExtra], `styler`[@citestyler], `plumber`[@citeplumber] `modelsummary`[@citemodelsummary], `rstanarm`[@citerstanarm].
+
+The inspiration for my data processing came from my desire to study what factors would affect the current price of coffee products from two vendors in different regions of Canada, such as the current price of coffee products from two vendors, Metro and SaveOnFoods. @tbl-variable are the data I selected after cleaning the data, and new variable month extracted and transformed from raw data also.
 
 Since the variable nowtime only records 4 months, it is considered a lack of Long-Term Trends, which means it's difficult to identify long-term pricing or demand patterns by using short data periods. So I only extracted a new variable—month from date of nowtime, which can simplify temporal analysis and identify trends, such as seasonal monthly pattern with price changes or demand patterns. It allows grouping data for monthly aggregation and supporting seasonality-focused understanding or forecasting models.
 
 
 ```{r}
 #| label: tbl-variable
-#| tbl-cap: "Variables and their Definitions for the Coffee Product Pricing."
+#| tbl-cap: "Variables for the Coffee Product Pricing."
 #| echo: false
 #| message: false
 #| warning: false
@@ -74,19 +76,21 @@ Since the variable nowtime only records 4 months, it is considered a lack of Lon
 variable_table <- data.frame(
   Variable = c("vendor", "old price", "current price", "product name", "month"),
   Definition = c(
-    "The retailer selling the product in Canada.",
-    "The historical price of the product, showing previous pricing or discounts.",
-    "The price of the product at the time of observation..",
+    "The retailer selling the product in Canada",
+    "The historical price of the product, showing previous pricing or discounts",
+    "The price of the product at the time of observation",
     "The specific product being sold, providing product-level understanding",
     "The month of data collection, extracted from 'nowtime'"
   )
 )
 
 
-kable(variable_table, col.names = c("Variable", "Definition"),
-      format = "latex", booktabs = TRUE, linesep = "") %>%
+kable(variable_table,
+  col.names = c("Variable", "Definition"),
+  format = "latex", booktabs = TRUE, linesep = ""
+) %>%
   column_spec(1, bold = TRUE, width = "15em") %>%
-  column_spec(2, width = "20em")  # Adjust the width to allow for more text in the definition column
+  column_spec(2, width = "20em") # Adjust the width to allow for more text in the definition column
 ```
 
 To provide an preview of the coffee pricing with all potential factors that might affect it. Here, @tbl-sample-analysis-data simply explains the variation between current price and old price in June for Metro's coffee products.
@@ -107,11 +111,11 @@ preview_table <- head(analysis_data, 10)
 # Display the table
 preview_table |>
   kable(
-    col.names = colnames(preview_table),  # Use original column names
-    digits = 2,  # Format numeric columns with 2 decimal places
-    booktabs = TRUE,  # LaTeX-style formatting
-    align = c("l", "l", "r", "r", "c"),  # Align columns (left, right, center)
-    format.args = list(big.mark = ",")  # Add thousand separators to numbers
+    col.names = colnames(preview_table), # Use original column names
+    digits = 2, # Format numeric columns with 2 decimal places
+    booktabs = TRUE, # LaTeX-style formatting
+    align = c("l", "l", "r", "r", "c"), # Align columns (left, right, center)
+    format.args = list(big.mark = ",") # Add thousand separators to numbers
   ) |>
   kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
 ```
@@ -126,7 +130,7 @@ The dataset includes essential fields such as vendor, product name, current pric
 
 ```{r}
 #| label: fig-freq-of-current-price
-#| fig-cap: "Frequency of Current Price"
+#| fig-cap: "Right-skewed distribution of Current Price"
 #| message: false
 #| echo: false
 
@@ -141,7 +145,7 @@ ggplot(analysis_data, aes(x = current_price)) +
 
 ```{r}
 #| label: fig-freq-of-old-price
-#| fig-cap: "Frequency of Old Price"
+#| fig-cap: "Right-skewed of Old Price"
 #| message: false
 #| echo: false
 
@@ -151,14 +155,13 @@ ggplot(analysis_data, aes(x = old_price)) +
   geom_histogram(bins = 30, fill = "salmon", color = "black") +
   labs(x = "Old Price", y = "Frequency") +
   theme_minimal()
-
 ```
 
 According to @fig-freq-of-old-price, the distribution is mainly focused between 5 and 20 units, pointing to a past market strategy where products were clustered around these prices. The consistency in this price range might reflect a stable market before any recent pricing adjustments influenced by external factors like supplier changes or inflation.
 
 ```{r}
 #| label: fig-freq-of-vendor
-#| fig-cap: "Frequency of Vendor"
+#| fig-cap: "Higher frequency on Metro compared to SaveOnFoods"
 #| message: false
 #| echo: false
 
@@ -175,7 +178,7 @@ In @fig-freq-of-vendor, the frequency of products available from Metro significa
 
 ```{r}
 #| label: fig-current-vs-old-price
-#| fig-cap: "Current Price vs Old Price"
+#| fig-cap: "Strong positive correlation between old and current prices for both vendors"
 #| message: false
 #| echo: false
 
@@ -186,14 +189,13 @@ ggplot(analysis_data, aes(x = old_price, y = current_price)) +
   scale_color_manual(values = c("Metro" = "blue", "SaveOnFoods" = "red")) +
   labs(x = "Old Price", y = "Current Price") +
   theme_minimal()
-
 ```
 
 The positive relationship shown in @fig-current-vs-old-price here indicates that current prices are influenced by their historical prices, maintaining a proportional increase or decrease. This trend suggests a pricing policy that adjusts prices based on previous benchmarks while taking into account factors like cost adjustments or market demand.
 
 ```{r}
 #| label: fig-current-price-by-vendor
-#| fig-cap: "Current Price by Vendor"
+#| fig-cap: "Similar median prices for both vendor and a wider range plus more outliers in Metro"
 #| message: false
 #| echo: false
 
@@ -207,7 +209,6 @@ ggplot(analysis_data, aes(x = vendor, y = current_price)) +
     y = "Current Price"
   ) +
   theme_minimal()
-
 ```
 
 @fig-current-price-by-vendor highlights how each vendor prices their products within the market. It shows that both vendors offer a wide range of prices, yet the spread and density of the data points may indicate Metro’s pricing strategy targets both lower and upper market segments, whereas SaveOnFoods might be focusing on a specific niche.
@@ -254,7 +255,13 @@ To implement this Bayesian model, we use the `rstanarm` package [@citerstanarm] 
 
 ## Model justification
 
-The Bayesian Multiple Linear Regression (MLR) model is a suitable choice for analyzing the relationship between `current price` (the dependent variable) and the predictors in the dataset. The dependent variable is continuous, and the Bayesian framework assumes a normal distribution for the response, which aligns well with the nature of coffee prices. This model captures the linear relationships between `old price` (continuous), `vendor` (categorical, represented as a dummy variable), and `month` (numeric). These predictors are assumed to have additive effects on the response, which fits the linear regression framework. Logistic regression is used when the outcome variable is binary (e.g. 0 or 1). However, in our dataset, the dependent variable, `current price`, is continuous. Since logistic regression cannot model continuous outcomes, it is unsuitable for this analysis. Also, poisson or negative binomial regression is typically applied when the response variable represents count data (e.g., the number of events occurring in a fixed period). `current_price` does not represent counts but rather continuous pricing data. Thus, these models do not align with the nature of the dependent variable.
+We considered an alternative model, the frequentist model, but ultimately did not select it. We conducted a training and testing dataset split and compared their prediction power, particularly looking at the Mean Squared Error (MSE). The results showed that the Bayesian Multiple Linear Regression (MLR) had a lower MSE, making it a better fit for our data. Additionally, the Bayesian approach provides greater flexibility.
+
+The Bayesian Multiple Linear Regression (MLR) model is a suitable choice for analyzing the relationship between the current price (the dependent variable) and the predictors in the dataset. The dependent variable is continuous, and the Bayesian framework assumes a normal distribution for the response, which aligns well with the nature of coffee prices. This model captures the linear relationships between the old price (continuous), vendor (categorical, represented as a dummy variable), and month (numeric). These predictors are assumed to have additive effects on the response, fitting the linear regression framework.
+
+Logistic regression is used when the outcome variable is binary (e.g., 0 or 1). However, in our dataset, the dependent variable, current price, is continuous. Since logistic regression cannot model continuous outcomes, it is unsuitable for this analysis. Similarly, Poisson or negative binomial regression is typically applied when the response variable represents count data (e.g., the number of events occurring in a fixed period). Since the current price represents continuous pricing data rather than counts, these models do not align with the nature of the dependent variable.
+
+The final results indicate that the Bayesian MLR model outperforms the frequentist model in terms of both flexibility and predictive performance, which led us to choose the Bayesian MLR model for our analysis.
 
 ## Model validation
 
@@ -267,9 +274,17 @@ In @fig-rhat-plot analysis of coffee product pricing in Canada, the use of the $
 
 # Results {#sec-results}
 
-@tbl-model-summary indicates a strong fit with a high $R^2$ of 0.900, suggesting a strong explanatory power of the model regarding the variance in coffee product prices. The model's parameters show that the old price of coffee (coefficient = 0.77) has a significant positive influence on the current price, suggesting that past pricing trends are good predictors of current pricing strategies. Vendor impact, specifically SaveOnFoods, shows a negative association with current price (coefficient = -0.61), indicating that coffee products from SaveOnFoods tend to be cheaper compared to Metro. Additionally, the month coefficient (0.06) implies a slight monthly variation in coffee pricing. The model's predictive performance is validated by low WAIC and LOOIC scores, and a small RMSE of 1.75, enhancing confidence in the reliability of its predictions.
+The analysis of coffee pricing in Canadian grocery stores several key observations based on the Bayesian multiple linear regression model. The model effectively captures the dynamics of pricing strategies employed by vendors and highlights the influence of historical price, vendor differences, and seasonal trends on current prices. @tbl-model-summary indicates a strong fit with a high $R^2$ of 0.900, indicating that approximately 90% of the variance in coffee prices is explained by the included predictors. This strong fit suggests the chosen factors—historical prices, vendor characteristics, and month—are significant in determining current coffee pricing. The coefficient for the historical price variable was found to be 0.77, indicating a strong positive effect on the current price. This means that higher past prices tend to lead to higher current prices, suggesting that vendors are consistent in maintaining pricing trends over time. The strong relationship between historical and current prices suggests that coffee vendors may to ensure price stability, which could be beneficial for maintaining customer loyalty and trust, as consumers often prefer predictable and steady pricing.
 
-@fig-credibility-interval llustrates the posterior distributions for the parameters in your Bayesian regression model, analyzing factors influencing coffee prices. The intercept shows a slight positive baseline effect. The old price of coffee strongly and positively affects the current price, indicating a direct relationship. The month variable shows a minimal and variable impact. SaveOnFoods, as a vendor, is associated with lower prices compared to Metro. The sigma parameter, indicating the model's error variance, shows a sharp and precise estimation, suggesting consistent variability in the data explained by the model.
+The model shows a significant difference between the two vendors, Metro and SaveOnFoods. Specifically, SaveOnFoods has a negative association with current price levels, with a coefficient of -0.61. This indicates that SaveOnFoods tends to offer coffee products at lower prices compared to Metro, which may point to different pricing strategies or market positioning. SaveOnFoods may focus on affordability and competitive pricing to attract cost-sensitive consumers, whereas Metro might position its products as more premium, thereby maintaining higher price points. The coefficient for the month variable, 0.06, suggests that there is a slight but consistent increase in prices over time, reflecting potential seasonal variations in demand or pricing adjustments throughout the year. This indicates that factors like holidays, consumer buying habits, and promotional events could have an impact on pricing patterns, although, due to the short data collection period, definitive conclusions regarding seasonal trends are limited. Expanding the data collection period to include more months or years would provide a clearer understanding of these seasonal trends and their impact on pricing.
+
+@fig-credibility-interval illustrates the posterior distributions for the parameters were consistent with the priors, providing stability in the estimates. This consistency indicates that the model's assumptions and data align well, reinforcing the reliability of the estimated effects. Notably, the vendor parameter for SaveOnFoods diverged more significantly, which might indicate unique pricing behaviors that warrant further investigation. SaveOnFoods may be employing specific pricing tactics that differ considerably from Metro, such as frequent promotional discounts or region-specific pricing strategies. Understanding these unique behaviors could help to explain why SaveOnFoods consistently offers lower prices. The model's reliability is further validated by a low RMSE of 1.75 and satisfactory WAIC and LOOIC scores, which collectively support the model's accuracy in predicting current prices. The greatness of these metrics suggests that the model can effectively be used to understand pricing strategies in the broader retail context.
+
+The distribution of current prices shows significant concentration around specific price points, potentially due to product quality or brand categorization. For instance, certain brands or types of coffee might be priced consistently across different vendors, creating clusters of similar price points. Similarly, historical prices display consistency, suggesting stable pricing strategies among vendors, which could be influenced by factors like cost of production, supply chain considerations, and consumer preferences. The frequency analysis highlights Metro's larger product offering compared to SaveOnFoods, which may provide Metro with a competitive edge in variety and customer attraction. A greater variety of products allows Metro to cater to a wider range of consumer preferences, potentially attracting both premium and budget-conscious customers. This variety might enable Metro to occupy different segments of the market, thereby enhancing its overall market presence.
+
+The results suggest that vendors rely heavily on historical prices to set current prices, maintaining a level of consistency that is likely focused on fostering consumer trust. Consumers often associate consistent pricing with reliability, which can help build brand loyalty and repeat purchasing behavior. The pricing differences between Metro and SaveOnFoods may also reflect distinct regional market strategies or consumer demographics. For example, SaveOnFoods might operate in regions with a higher sensitivity to pricing, leading it to adopt more competitive price levels. Metro, on the other hand, may cater to areas where consumers are willing to pay a premium for perceived quality or brand reputation. Seasonal factors, although not extensively captured due to data limitations, do show some influence on pricing adjustments over time. Seasonal trends such as increased demand during the holiday season or promotional events might cause temporary price hikes, which could be better understood with a more extended dataset. Incorporating data from a full year or multiple years could provide more substantial evidence of these seasonal effects, enhancing the understanding of how temporal factors shape pricing strategies.
+
+Overall, this analysis underscores the importance of historical pricing, vendor differences, and seasonal influences in determining coffee prices in Canadian grocery stores. The reliance on historical data helps vendors ensure price stability, which can be a key factor in maintaining customer satisfaction. Vendor-specific strategies, such as those seen with SaveOnFoods' lower pricing, indicate that different retailers may adopt distinct approaches to appeal to their target markets. Understanding these dynamics can help vendors refine their pricing strategies, optimize inventory management, and ultimately enhance their market competitiveness. Future research could benefit from a longer data collection period and the inclusion of additional variables such as promotional activities, consumer demographics, and regional economic conditions to provide a more  view of coffee pricing dynamics.
 
 
 
@@ -279,7 +294,7 @@ In @fig-rhat-plot analysis of coffee product pricing in Canada, the use of the $
 
 This research performed an extensive examination of coffee product pricing across major Canadian grocery store chains, focusing on Metro and SaveOnFoods. By employing a regression model, the study analyzed how historical price data (by month) serves as a predictor of current coffee prices. This method helped in identifying pricing patterns and provided a structured approach to understand the economic factors influencing those patterns. The analysis involved scrutinizing various pricing aspects, ensuring that each factor contributing to the fluctuations was carefully assessed to draw meaningful conclusions.
 
-The findings highlight a dynamic relationship between past and present pricing strategies, emphasizing the role of historical prices in shaping current market behaviors. The analysis indicates that historical prices strongly influence current prices, suggesting that vendors often rely on previous data when determining future pricing decisions. This approach appears to be aimed at ensuring stability in the market and optimizing profit margins, which is important in a highly competitive retail environment. By maintaining consistency in pricing and leveraging historical trends, vendors might be focusing on strategies to attract and retain customers, avoid sudden price changes, and manage costs effectively. The reliance on historical pricing data allows vendors to make informed decisions that minimize risks associated with unexpected market changes. Additionally, it suggests that these pricing strategies are designed to foster consumer trust by providing predictable price points, which is particularly important in sustaining customer loyalty and enhancing brand perception in a highly volatile market.
+The findings highlight a dynamic relationship between past and present pricing strategies, emphasizing the role of historical prices in shaping current market behaviors. The analysis indicates that historical prices strongly influence current prices, suggesting that vendors often rely on previous data when determining future pricing decisions. This approach appears to be focused at ensuring stability in the market and optimizing profit margins, which is important in a highly competitive retail environment. By maintaining consistency in pricing and leveraging historical trends, vendors might be focusing on strategies to attract and retain customers, avoid sudden price changes, and manage costs effectively. The reliance on historical pricing data allows vendors to make informed decisions that minimize risks associated with unexpected market changes. Additionally, it suggests that these pricing strategies are designed to foster consumer trust by providing predictable price points, which is particularly important in sustaining customer loyalty and enhancing brand perception in a highly volatile market.
 
 Moreover, the study also provides observation into how price stability can help in inventory management and supply chain optimization. By using historical data as a benchmark, vendors can better predict demand patterns, allowing them to streamline their logistics and reduce overhead costs. This, in turn, helps maintain a balance between supply and demand, ultimately leading to enhanced operational efficiency. In a market where even small fluctuations can have a significant impact on consumer purchasing decisions, understanding the relationship between historical and current prices is quite necessary for developing effective pricing strategies that ensure both profitability and competitiveness.
 
@@ -342,6 +357,8 @@ The overall survey design and methodology are grounded in the literature on surv
 
 This idealized survey and methodology framework is not only methodically sound and strategically designed but also extensively planned to achieve detailed understanding into coffee pricing, thereby fulfilling the objectives set out for this research initiative.
 
+
+
 # Model details
 ```{r}
 #| eval: true
@@ -351,7 +368,7 @@ This idealized survey and methodology framework is not only methodically sound a
 #| label: fig-ppcheck-and-posterior-vs-prior
 #| layout-ncol: 2
 #| fig-cap: "PPcheck & Posterior vs Prior"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
+#| fig-subcap: ["Model predictions ($y_{rep}$) closely align with observed data ($y$)", "Posterior estimates are more precise compared to prior especially for vendrSaveOnFoods and (Intercept)"]
 
 Coffee_product_pricing <-
   readRDS(file = here::here("models/Coffee_product_pricing.rds"))
@@ -367,9 +384,11 @@ posterior_vs_prior(Coffee_product_pricing) +
   coord_flip()
 ```
 
+
+
 ```{r}
 #| label: tbl-model-summary
-#| tbl-cap: "Model summary of Coffee product pricing"
+#| tbl-cap: "Good prediction accuracy with $R^2$ of 0.900 and RMSE of 1.75"
 #| eval: true
 #| echo: false
 #| warning: false
@@ -382,13 +401,15 @@ modelsummary(
   ),
   fmt = 2
 )
-
 ```
 
 
+
+\newpage
+
 ```{r}
 #| label: fig-credibility-interval
-#| fig-cap: "credibility interval"
+#| fig-cap: "Credible intervals indicate high certainty for old price and lower certainty for other parameters"
 #| eval: true
 #| echo: false
 #| warning: false
@@ -417,13 +438,12 @@ plot(Coffee_product_pricing, "trace", "(Intercept)")
 plot(Coffee_product_pricing, "trace", "old_price")
 plot(Coffee_product_pricing, "trace", "month")
 plot(Coffee_product_pricing, "trace", "vendorSaveOnFoods")
-
-
 ```
+
 
 ```{r}
 #| label: fig-rhat-plot
-#| fig-cap: "R-hat plot of Coffee products pricing"
+#| fig-cap: "Good convergence with Rhat values close to 1"
 #| eval: true
 #| echo: false
 #| warning: false
@@ -432,8 +452,13 @@ plot(Coffee_product_pricing, "trace", "vendorSaveOnFoods")
 plot(Coffee_product_pricing, "rhat")
 ```
 
-\newpage
 
+
+
+
+
+
+\clearpage
 
 # References
 
